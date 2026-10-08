@@ -1,0 +1,138 @@
+// C-PAGE — "Duolingo for C++" data model
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String?
+  avatarUrl    String?
+  githubId     String?  @unique
+  xp           Int      @default(0)
+  gems         Int      @default(0)
+  streak       Int      @default(0)
+  lastActiveAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  role         String   @default("USER")
+
+  progress     UserProgress[]
+  achievements Achievement[]
+  streaks      Streak[]
+  submissions  Submission[]
+
+  @@index([xp])
+}
+
+model Chapter {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  order       Int
+  icon        String?
+  createdAt   DateTime @default(now())
+
+  lessons Lesson[]
+
+  @@index([order])
+}
+
+model Lesson {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  order         Int
+  chapterId     String
+  guideContent  String
+  exampleCode   String
+  exampleOutput String
+  starterCode   String
+  solutionCode  String
+  hints         String[]
+  testCases     Json
+  xpReward      Int      @default(20)
+  createdAt     DateTime @default(now())
+
+  chapter    Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  progress   UserProgress[]
+  submissions Submission[]
+
+  @@unique([chapterId, order])
+  @@index([chapterId])
+}
+
+model UserProgress {
+  id           String   @id @default(cuid())
+  userId       String
+  lessonId     String
+  completed    Boolean  @default(false)
+  attempts     Int      @default(0)
+  hintsUsed    Int      @default(0)
+  code         String?
+  failed       Boolean  @default(false)
+  xpEarned     Int      @default(0)
+  nextReviewAt DateTime?
+  completedAt  DateTime?
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([nextReviewAt])
+}
+
+model Achievement {
+  id         String   @id @default(cuid())
+  userId     String
+  type       String
+  unlockedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@index([userId])
+}
+
+model Streak {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model Submission {
+  id         String   @id @default(cuid())
+  userId     String
+  lessonId   String
+  code       String
+  language   String   @default("cpp")
+  passed     Boolean  @default(false)
+  passedCount Int     @default(0)
+  totalCount  Int     @default(0)
+  createdAt  DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lessonId])
+  @@index([createdAt])
+}
