@@ -11,7 +11,30 @@ export async function getUserId(): Promise<string | null> {
 export async function getCurrentUser(): Promise<User | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  return prisma.user.findUnique({ where: { id: userId } });
+  try {
+    return await prisma.user.findUnique({ where: { id: userId } });
+  } catch (error) {
+    // Never swallow Next.js control-flow signals (dynamic usage, redirects).
+    if (isNextControlFlowError(error)) throw error;
+    // A missing database or a transient outage should degrade to "logged out"
+    // for rendering purposes rather than crashing the whole route.
+    console.error("getCurrentUser failed", error);
+    return null;
+  }
+}
+
+function isNextControlFlowError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null || !("digest" in error)) {
+    return false;
+  }
+  const digest = (error as { digest?: unknown }).digest;
+  return (
+    typeof digest === "string" &&
+    (digest === "DYNAMIC_SERVER_USAGE" ||
+      digest.startsWith("NEXT_") ||
+      digest.startsWith("NEXT_REDIRECT") ||
+      digest.startsWith("NEXT_NOT_FOUND"))
+  );
 }
 
 export class UnauthorizedError extends Error {
