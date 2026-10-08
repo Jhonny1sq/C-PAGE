@@ -17,9 +17,11 @@ import type { ChapterNode, LearningPath } from "@/lib/learning";
 export function SkillTree({
   path,
   dueReviewIds,
+  basePath = "/learn",
 }: {
   path: LearningPath;
   dueReviewIds: string[];
+  basePath?: string;
 }) {
   const dueSet = new Set(dueReviewIds);
   const { totalLessons, completedLessons } = path.stats;
@@ -79,6 +81,7 @@ export function SkillTree({
               chapter={chapter}
               chapterIndex={chapterIndex}
               dueSet={dueSet}
+              basePath={basePath}
             />
           </li>
         ))}
@@ -91,10 +94,12 @@ function ChapterPath({
   chapter,
   chapterIndex,
   dueSet,
+  basePath,
 }: {
   chapter: ChapterNode;
   chapterIndex: number;
   dueSet: Set<string>;
+  basePath: string;
 }) {
   if (chapter.total === 0) {
     return (
@@ -145,7 +150,7 @@ function ChapterPath({
               </div>
             ) : (
               <Link
-                href={`/learn/${lesson.slug}`}
+                href={`${basePath}/${lesson.slug}`}
                 className={cn(
                   "group flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-semibold transition-all",
                   status === "complete"

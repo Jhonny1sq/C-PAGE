@@ -62,8 +62,12 @@ export interface LearningPath {
  * lesson in that chapter is complete. The first lesson of a chapter is
  * unlocked when the previous chapter has at least one completed lesson.
  */
-export async function buildLearningPath(userId: string): Promise<LearningPath> {
+export async function buildLearningPath(
+  userId: string,
+  opts: { secretOnly?: boolean } = {}
+): Promise<LearningPath> {
   const chapters = await prisma.chapter.findMany({
+    where: opts.secretOnly ? { isSecret: true } : { isSecret: false },
     orderBy: { order: "asc" },
     include: {
       lessons: {

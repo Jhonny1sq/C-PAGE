@@ -19,10 +19,12 @@ export function CompletionModal({
   data,
   nextSlug,
   onClose,
+  basePath = "/learn",
 }: {
   data: CompletionData | null;
   nextSlug: string | null;
   onClose: () => void;
+  basePath?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(true);
@@ -32,7 +34,7 @@ export function CompletionModal({
   function goNext() {
     setOpen(false);
     onClose();
-    router.push(nextSlug ? `/learn/${nextSlug}` : "/learn");
+    router.push(nextSlug ? `${basePath}/${nextSlug}` : basePath);
     router.refresh();
   }
 

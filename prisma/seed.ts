@@ -1,6 +1,8 @@
 import "./env";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import type { SeedChapter } from "./lesson-types";
+import { extraChapters } from "./content";
 
 const F = "```";
 
@@ -13,35 +15,7 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),
 });
 
-interface SeedLesson {
-  slug: string;
-  title: string;
-  order: number;
-  guideContent: string;
-  exampleCode: string;
-  exampleOutput: string;
-  starterCode: string;
-  solutionCode: string;
-  hints: string[];
-  testCases: {
-    name: string;
-    stdin: string;
-    expectedOutput: string;
-    hidden: boolean;
-  }[];
-  xpReward: number;
-}
-
-interface SeedChapter {
-  slug: string;
-  title: string;
-  description: string;
-  order: number;
-  icon: string;
-  lessons: SeedLesson[];
-}
-
-const chapters: SeedChapter[] = [
+const baseChapters: SeedChapter[] = [
   {
     slug: "variables-types",
     title: "Variables & Types",
@@ -726,6 +700,8 @@ int main() {
   },
 ];
 
+const chapters: SeedChapter[] = [...baseChapters, ...extraChapters];
+
 async function seed() {
   console.log("Seeding C-PAGE chapters and lessons...");
 
@@ -737,6 +713,7 @@ async function seed() {
         description: chapter.description,
         order: chapter.order,
         icon: chapter.icon,
+        isSecret: chapter.isSecret ?? false,
       },
       create: {
         slug: chapter.slug,
@@ -744,6 +721,7 @@ async function seed() {
         description: chapter.description,
         order: chapter.order,
         icon: chapter.icon,
+        isSecret: chapter.isSecret ?? false,
       },
     });
 

@@ -30,6 +30,7 @@ export async function getOverview(userId: string): Promise<Overview> {
   const [chapters, completedProgress, unlockedAchievements, submissions, dueCount] =
     await Promise.all([
       prisma.chapter.findMany({
+        where: { isSecret: false },
         orderBy: { order: "asc" },
         include: { lessons: { select: { id: true } } },
       }),

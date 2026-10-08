@@ -37,6 +37,7 @@ export function LessonClient({
   initialHints,
   completed,
   nextSlug,
+  basePath = "/learn",
 }: {
   lesson: LessonView;
   publicTests: PublicTestCase[];
@@ -44,6 +45,7 @@ export function LessonClient({
   initialHints: number;
   completed: boolean;
   nextSlug: string | null;
+  basePath?: string;
 }) {
   const router = useRouter();
 
@@ -198,7 +200,7 @@ export function LessonClient({
     <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:py-8">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <Link
-          href="/learn"
+          href={basePath}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-400 hover:text-slate-200"
         >
           <ArrowLeft className="h-4 w-4" /> Back to path
@@ -336,6 +338,7 @@ export function LessonClient({
       <CompletionModal
         data={completion}
         nextSlug={nextSlug}
+        basePath={basePath}
         onClose={() => setCompletion(null)}
       />
     </div>

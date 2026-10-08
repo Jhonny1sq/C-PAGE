@@ -48,10 +48,17 @@ export async function POST(request: Request) {
 
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
-    select: { id: true, testCases: true },
+    select: { id: true, testCases: true, chapter: { select: { isSecret: true } } },
   });
   if (!lesson) {
     return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
+  }
+
+  if (lesson.chapter.isSecret) {
+    const { hasVaultAccess } = await import("@/lib/vault");
+    if (!(await hasVaultAccess(userId))) {
+      return NextResponse.json({ error: "The vault is locked." }, { status: 403 });
+    }
   }
 
   const testCases = parseTestCases(lesson.testCases);

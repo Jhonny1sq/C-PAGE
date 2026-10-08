@@ -21,6 +21,12 @@ export async function Navbar() {
 
         {user ? (
           <div className="flex items-center gap-2 sm:gap-4">
+            <Link
+              href="/vault"
+              className="hidden items-center gap-1 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1.5 text-xs font-bold text-purple-300 transition-colors hover:border-purple-400 hover:text-purple-200 sm:flex"
+            >
+              🔓 Vault
+            </Link>
             <div className="hidden items-center gap-3 rounded-full border border-slate-800 bg-slate-900/70 px-4 py-1.5 text-sm font-semibold sm:flex">
               <span className="flex items-center gap-1 text-orange-400">
                 <Flame className="h-4 w-4" /> {user.streak}

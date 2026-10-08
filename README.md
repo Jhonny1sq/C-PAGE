@@ -135,6 +135,7 @@ Open http://localhost:3000, create an account, and start at the top of the path.
 | `AUTH_TRUST_HOST`     |    ➖    | Set `true` when running behind a proxy / on a non-Vercel host.               |
 | `AUTH_GITHUB_ID`      |    ➖    | GitHub OAuth app client ID. Omit to disable the GitHub button.              |
 | `AUTH_GITHUB_SECRET`  |    ➖    | GitHub OAuth app client secret.                                             |
+| `SECRET_KEY`          |    ➖    | Passphrase that unlocks the secret `/vault` track. Empty = vault disabled.  |
 | `JUDGE0_API_URL`      |    ➖    | Judge0 base URL. Defaults to `https://ce.judge0.com`.                        |
 | `JUDGE0_API_KEY`      |    ➖    | RapidAPI key (set together with `JUDGE0_API_HOST` for RapidAPI mode).        |
 | `JUDGE0_API_HOST`     |    ➖    | RapidAPI host header.                                                        |
@@ -189,18 +190,40 @@ panel with a retry button instead of failing silently.
 
 ## Seeded content
 
-The seed script (`prisma/seed.ts`) creates **9 chapters** and 6 fully playable
-lessons (the in-between chapters are scaffolded and ready for more lessons):
+The seed script (`prisma/seed.ts` + `prisma/content.ts`) creates **10 chapters**
+and **18 lessons**:
 
 1. **Variables & Types** — Declaring Variables, Types & Arithmetic
 2. **Control Flow** — If/Else, For Loops
 3. **Functions** — Functions
-4. **Arrays & Vectors**
+4. **Arrays & Vectors** — Arrays & Indexing, Vectors & push_back
 5. **Pointers & References** — Pointers 101
-6. **OOP**, **STL**, **Templates**, **File I/O** (scaffolded)
+6. **OOP** — Classes & Objects, Inheritance Basics
+7. **STL** — Sorting with std::sort
+8. **Templates** — Function Templates
+9. **File I/O** — Files That Remember
+10. **The Vault** 🔓 *(secret track, see below)* — Addresses, Struct Offsets,
+    Bit Flags, Pattern Scanning, Aim Math
 
 Each lesson ships with a markdown guide, a guided example, starter + solution
 code, four progressive hints, and multiple test cases (some hidden).
+
+## The Vault (secret track)
+
+`/vault` is a hidden advanced track gated by the `SECRET_KEY` env var:
+
+- The page shows a passphrase form until unlocked. A correct key sets a signed,
+  user-bound, httpOnly cookie (HMAC-SHA256, 30 days); wrong guesses are
+  rate-limited (10/min).
+- Vault chapters (`Chapter.isSecret`) are excluded from the main skill tree,
+  the dashboard, and the leaderboard logic. They render on their own `/vault`
+  path with sequential unlocking.
+- `/api/run` and `/api/complete` reject vault lessons with `403` when the
+  grant cookie is missing or forged.
+- Vault challenges stay portable (they compile on Judge0) while the guides
+  teach the real application: memory addresses, struct offsets, bit flags,
+  signature scanning, and vector aim math — aimed at your own games and
+  single-player mods.
 
 ---
 
@@ -238,7 +261,8 @@ Deploy the Judge0 Docker Compose stack on any VM (Railway, Fly, a VPS) and point
 c-page/
 ├── prisma/
 │   ├── schema.prisma        # data model (User, Chapter, Lesson, ...)
-│   └── seed.ts              # chapters + lessons seed
+│   ├── seed.ts              # base chapters + lessons seed
+│   └── content.ts           # extra normal + vault lessons (merged by seed.ts)
 ├── prisma.config.ts         # Prisma 7 CLI config
 ├── src/
 │   ├── app/
@@ -247,8 +271,10 @@ c-page/
 │   │   │   ├── auth/signup/route.ts
 │   │   │   ├── run/route.ts          # Judge0 execution + grading
 │   │   │   ├── complete/route.ts     # XP, streak, achievements
-│   │   │   └── progress/route.ts     # autosave + reset
+│   │   │   ├── progress/route.ts     # autosave + reset
+│   │   │   └── vault/unlock/route.ts # SECRET_KEY check + grant cookie
 │   │   ├── learn/                    # skill tree + lesson pages
+│   │   ├── vault/                    # secret track (unlock form + lessons)
 │   │   ├── dashboard/ leaderboard/ profile/
 │   │   ├── login/ signup/ page.tsx
 │   │   └── layout.tsx globals.css
@@ -256,11 +282,11 @@ c-page/
 │   │   ├── ui/                       # button, card, badge, input, ...
 │   │   ├── lesson/                   # editor, output, hints, hearts, modal
 │   │   ├── learning/                 # skill tree
-│   │   ├── auth/ dashboard/
+│   │   ├── auth/ dashboard/ vault/
 │   │   ├── navbar.tsx markdown.tsx
 │   │   └── icons.tsx
 │   ├── lib/
-│   │   ├── prisma.ts judge0.ts       # infra
+│   │   ├── prisma.ts judge0.ts vault.ts  # infra + vault grants
 │   │   ├── auth helpers, validation.ts gamification.ts
 │   │   ├── learning.ts achievements.ts leaderboard.ts dashboard.ts
 │   │   ├── rate-limit.ts session.ts  # auth + abuse protection
